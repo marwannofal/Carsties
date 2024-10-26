@@ -1,10 +1,14 @@
-using MongoDB.Driver;
-using MongoDB.Entities;
-using SearchService.Models;
+using System.Net;
+using Polly;
+using Polly.Extensions.Http;
+using SearchService.Data;
+using SearchService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddHttpClient<AuctionSvcHttpClient>()
+    .AddPolicyHandler(GetPolicy());
 
 var app = builder.Build();
 
@@ -12,14 +16,22 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-await DB.InitAsync("SearchDb", MongoClientSettings
-    .FromConnectionString(builder.Configuration.GetConnectionString("MongoDbConnection")));
-
-await DB.Index<Item>()
-    .Key(x  => x.Make, KeyType.Text)
-    .Key(x  => x.Model, KeyType.Text)
-    .Key(x  => x.Color, KeyType.Text)
-    .CreateAsync();
+app.Lifetime.ApplicationStarted.Register(async () => 
+{
+    try
+    {
+        await DbInitializer.InitDb(app);
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+    }   
+});
     
-
 app.Run();
+
+static IAsyncPolicy<HttpResponseMessage> GetPolicy()
+    => HttpPolicyExtensions
+        .HandleTransientHttpError()
+        .OrResult(msg => msg.StatusCode == HttpStatusCode.NotFound)
+        .WaitAndRetryForeverAsync(_ => TimeSpan.FromSeconds(3));
