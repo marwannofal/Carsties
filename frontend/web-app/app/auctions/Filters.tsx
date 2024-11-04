@@ -32,7 +32,7 @@ const filterButtons = [
         value: 'live'
     },
     {
-        label: 'Ending in less then 6 hours',
+        label: 'Ending in less than 6 hours',
         icon: GiFinishLine,
         value: 'endingSoon'
     },
