@@ -1,0 +1,103 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+'use client'
+
+import { Button } from 'flowbite-react';
+import React, { useEffect } from 'react'
+import { FieldValues, useForm } from 'react-hook-form'
+import Input from '../components/Input';
+import DateInput from '../components/DateInput';
+import { createAuction, updateAuction } from '../actions/auctionActions';
+import { usePathname, useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+import { Auction } from '@/types';
+
+type Props = {
+    auction?: Auction
+}
+
+export default function AuctionForm({ auction }: Props) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const {control, handleSubmit, setFocus, reset,
+        formState: {isSubmitting, isValid}} = useForm({
+            mode: 'onTouched'
+        });
+
+    useEffect(() => {
+        if (auction) {
+            const {make, model, color, mileage, year} = auction;
+            reset({make, model, color, mileage, year});
+        }
+        setFocus('make')
+    }, [setFocus, auction, reset])
+
+    async function onSubmit(data: FieldValues) {
+        try {
+            let id = '';
+            let res;
+            if (pathname === '/auctions/create') {
+                res = await createAuction(data);
+                id = res.id;
+            } else {
+                if (auction) {
+                    res = await updateAuction(data, auction.id);
+                    id = auction.id;
+                }
+            }
+
+            if (res.error) {
+                throw res.error;
+            }
+            router.push(`/auctions/details/${id}`)
+        } catch (error: any) {
+            toast.error(error.status + ' ' + error.message)
+        }
+    }
+
+    return (
+        <form className='flex flex-col mt-3' onSubmit={handleSubmit(onSubmit)}>
+            {/* for the make */}
+            <Input label='Make' name='make' control={control} rules={{required: 'Make is required'}} />
+            {/* for the model */}
+            <Input label='Model' name='model' control={control} rules={{required: 'Model is required'}} />
+            {/* for the Color */}
+            <Input label='Color' name='color' control={control} rules={{required: 'Color is required'}} />
+            {/* for the Year and Mileage */}
+            <div className='grid grid-cols-2 gap-3'>
+                <Input label='Year' name='year' control={control} type='number' rules={{required: 'Year is required'}} />
+                <Input label='Mileage' name='mileage' control={control} type='number' rules={{required: 'Mileage is required'}} />
+            </div>
+
+            {pathname === '/auctions/create' && 
+            <>
+                {/* for the image #NOTE: i will update it later for multible image uploading in cloudanery <3 */}
+                <Input label='Image URL' name='imageUrl' control={control} rules={{required: 'Image URL is required'}} />
+                {/* for the Reserve Price and  Auction End*/}
+                <div className='grid grid-cols-2 gap-3'>
+                    <Input label='Reserve Price (enter 0 if no Reserve Price)' 
+                        name='reservePrice' control={control} 
+                        type='number' rules={{required: 'Reserve Price is required'}} />
+                    <DateInput 
+                        label='Auction End date/time' 
+                        name='auctionEnd' 
+                        control={control} 
+                        dateFormat='dd MMMM yyyy h:mm a'
+                        showTimeSelect
+                        rules={{required: 'Auction End time/date is required'}} 
+                        
+                        />
+                </div>
+            </>}
+            
+            {/* for the Buttons */}
+            <div className='flex justify-between'>
+                <Button color='red'>Cancel</Button>
+                <Button 
+                    isProcessing={isSubmitting}
+                    disabled={!isValid}
+                    type='submit'
+                    outline color='success'>Submit</Button>
+            </div>
+        </form>
+    )
+}

@@ -12,6 +12,9 @@ declare module "next-auth" {
     interface Profile {
         username: string;
     }
+    interface Profile {
+        username: string;
+    }
 }
 
 declare module 'next-auth/jwt' {
