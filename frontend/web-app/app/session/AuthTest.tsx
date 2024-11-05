@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+'use client'
+
 import React, { useState } from 'react'
 import { updateAuctionTest } from '../actions/auctionActions';
 import { Button } from 'flowbite-react';
