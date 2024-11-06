@@ -1,8 +1,11 @@
 using AuctionService.Consumers;
 using AuctionService.Data;
+using AuctionService.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Polly;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,22 +50,25 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.TokenValidationParameters.NameClaimType = "username";
     });
 
+builder.Services.AddGrpc();
+
 var app = builder.Build();
 
+// Configure the HTTP request pipeline.
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// Initialize the database with seed data
-var logger = app.Services.GetRequiredService<ILogger<Program>>();
-try
-{
-    DbInitializer.InitDb(app);
-}
-catch (Exception e)
-{
-    logger.LogError(e, "An error occurred during database initialization.");
-}
+app.MapControllers();
+app.MapGrpcService<GrpcAuctionService>();
+
+var retryPolicy = Policy
+    .Handle<NpgsqlException>()
+    .WaitAndRetry(5, retryAttempt => TimeSpan.FromSeconds(5));
+
+retryPolicy.ExecuteAndCapture(() => DbInitializer.InitDb(app));
 
 app.Run();
+
+public partial class Program {}
