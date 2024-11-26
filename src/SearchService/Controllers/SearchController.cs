@@ -26,16 +26,16 @@ namespace SearchService.Controllers
                 "new" => query.Sort(x => x.Descending(x => x.CreatedAt)),
                 _ => query.Sort(x => x.Ascending(x => x.AuctionEnd))
             };
-            
+
             if (!string.IsNullOrEmpty(searchParams.FilterBy))
             {
                 query = searchParams.FilterBy switch
                 {
-                    "finished" => query.Match(x => x.AuctionEnd < DateTime.UtcNow),
+                    "finished" => query.Match(x => x.AuctionEnd < DateTime.Now),
                     "endingSoon" => query.Match(x =>
-                        x.AuctionEnd < DateTime.UtcNow.AddHours(6) 
-                            && x.AuctionEnd > DateTime.UtcNow),
-                    _ => query.Match(x => x.AuctionEnd > DateTime.UtcNow) // live
+                        x.AuctionEnd < DateTime.Now.AddHours(6)
+                            && x.AuctionEnd > DateTime.Now),
+                    _ => query.Match(x => x.AuctionEnd > DateTime.Now) // live
                 };
             }
 
@@ -54,7 +54,7 @@ namespace SearchService.Controllers
 
             var result = await query.ExecuteAsync();
 
-            return Ok(new  
+            return Ok(new
             {
                 results = result.Results,
                 pageCount = result.PageCount,

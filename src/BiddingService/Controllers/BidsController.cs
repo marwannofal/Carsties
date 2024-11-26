@@ -12,7 +12,7 @@ namespace BiddingService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BidsController(IMapper mapper, IPublishEndpoint publishEndpoint, 
+public class BidsController(IMapper mapper, IPublishEndpoint publishEndpoint,
     GrpcAuctionClient grpcClient) : ControllerBase
 {
     [Authorize]
@@ -42,7 +42,7 @@ public class BidsController(IMapper mapper, IPublishEndpoint publishEndpoint,
             Bidder = User.Identity.Name
         };
 
-        if (auction.AuctionEnd < DateTime.UtcNow)
+        if (auction.AuctionEnd < DateTime.Now)
         {
             bid.BidStatus = BidStatus.Finished;
         }

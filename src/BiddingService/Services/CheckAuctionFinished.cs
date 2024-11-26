@@ -24,14 +24,14 @@ public class CheckAuctionFinished(ILogger<CheckAuctionFinished> logger, IService
     private async Task CheckAuctions(CancellationToken stoppingToken)
     {
         var finishedAuctions = await DB.Find<Auction>()
-            .Match(x => x.AuctionEnd <= DateTime.UtcNow)
+            .Match(x => x.AuctionEnd <= DateTime.Now)
             .Match(x => !x.Finished)
             .ExecuteAsync(stoppingToken);
 
         if (finishedAuctions.Count == 0) return;
 
 		logger.LogInformation($"==> Found {finishedAuctions.Count} auctions that have completed");
-        
+
         using var scope = services.CreateScope();
         var endpoint = scope.ServiceProvider.GetRequiredService<IPublishEndpoint>();
 

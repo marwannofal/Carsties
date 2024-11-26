@@ -1,10 +1,10 @@
 import { numberWithComma } from '@/app/lib/numberWithComma';
-import { Bid } from '@/types'
-import { format } from 'date-fns';
-import React from 'react'
+import { Bid } from '@/types';
+import { format, isValid } from 'date-fns';
+import React from 'react';
 
 type Props = {
-    bid: Bid
+    bid: Bid;
 }
 
 export default function Biditem({ bid }: Props) {
@@ -13,24 +13,28 @@ export default function Biditem({ bid }: Props) {
         let text = '';
         switch (bid.bidStatus) {
             case 'Accepted':
-                bgColor = 'bg-green-200'
-                text = 'Bid accepted'
+                bgColor = 'bg-green-200';
+                text = 'Bid accepted';
                 break;
             case 'AcceptedBelosReserve':
-                bgColor = 'bg-amber-500'
-                text = 'Reserve not met'
+                bgColor = 'bg-amber-500';
+                text = 'Reserve not met';
                 break;
             case 'TooLow':
-                bgColor = 'bg-red-200'
-                text = 'Bid was too low'
+                bgColor = 'bg-red-200';
+                text = 'Bid was too low';
                 break;
             default:
-                bgColor = 'bg-red-200'
-                text = 'Bid placed after auction finished'
+                bgColor = 'bg-red-200';
+                text = 'Bid placed after auction finished';
                 break;
         }
-        return {bgColor, text}
+        return { bgColor, text };
     }
+
+    // Check if bidTime is valid
+    const bidTime = new Date(bid.bidTime);
+    const formattedBidTime = isValid(bidTime) ? format(bidTime, 'dd MMM yyyy h:mm a') : 'Invalid Date';
 
     return (
         <div className={`
@@ -40,7 +44,7 @@ export default function Biditem({ bid }: Props) {
         `}>
             <div className="flex flex-col">
                 <span>Bidder: {bid.bidder}</span>
-                <span className="text-gray-700 text-sm">Time: {format(bid.bidTime, 'dd MMM yyyy h:mm a')}</span>
+                <span className="text-gray-700 text-sm">Time: {formattedBidTime}</span>
             </div>
             <div className="flex flex-col text-right">
                 <div className="text-xl font-semibold">${numberWithComma(bid.amount)}</div>
@@ -49,5 +53,5 @@ export default function Biditem({ bid }: Props) {
                 </div>
             </div>
         </div>
-    )
+    );
 }
